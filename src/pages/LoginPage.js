@@ -35,7 +35,7 @@ function LoginPage() {
         const user = e.target.elements.user.value;
         const password = e.target.elements.password.value;
         console.log(user + password);
-        history.push('/selecao');
+        history.push('/vacinas/selecao');
     }
 
     return (

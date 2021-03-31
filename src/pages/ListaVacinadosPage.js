@@ -32,7 +32,7 @@ function ListaVacinadosPage(props) {
     const history = useHistory();
 
     const handleAdd = () => {
-        history.push('/vacinar')
+        history.push('/vacinas/vacinar')
     };
 
     return (

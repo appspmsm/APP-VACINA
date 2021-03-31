@@ -76,7 +76,7 @@ function SelecaoPage() {
   };
 
   const handleConfirmation = (event) => {
-    history.push('/listavacinados', {grupo: grupo, vacina: vacina, lote: lote});
+    history.push('/vacinas/listavacinados', {grupo: grupo, vacina: vacina, lote: lote});
 
   }
 
