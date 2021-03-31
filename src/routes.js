@@ -9,8 +9,8 @@ export const Routes = () => {
         <Switch>
             <Route path={'/vacinas/'} component={LoginPage} exact />
             <Route path={'/vacinas/selecao'} component={SelecaoPage} />
-            <Route path={'vacinas/listavacinados'} component={ListaVacinadosPage} />
-            <Route path={'vacinas/vacinar'} component={VacinarPage} />
+            <Route path={'/vacinas/listavacinados'} component={ListaVacinadosPage} />
+            <Route path={'/vacinas/vacinar'} component={VacinarPage} />
         </Switch>
     )
 }
