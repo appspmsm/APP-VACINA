@@ -7,10 +7,10 @@ import VacinarPage from "./pages/VacinarPage";
 export const Routes = () => {
     return (
         <Switch>
-            <Route path="/" component={LoginPage} exact />
-            <Route path="/selecao" component={SelecaoPage} />
-            <Route path="/listavacinados" component={ListaVacinadosPage} />
-            <Route path="/vacinar" component={VacinarPage} />
+            <Route path={process.env.PUBLIC_URL + '/'} component={LoginPage} exact />
+            <Route path={process.env.PUBLIC_URL + '/selecao'} component={SelecaoPage} />
+            <Route path={process.env.PUBLIC_URL + '/listavacinados'} component={ListaVacinadosPage} />
+            <Route path={process.env.PUBLIC_URL + '/vacinar'} component={VacinarPage} />
         </Switch>
     )
 }
