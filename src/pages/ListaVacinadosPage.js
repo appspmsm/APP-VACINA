@@ -33,7 +33,7 @@ function ListaVacinadosPage(props) {
     const history = useHistory();
 
     const handleAdd = () => {
-        history.push('/vacinas/vacinar', {login: login, grupo: grupo, vacina: vacina, lote: lote})
+        history.push('/vacinar', {login: login, grupo: grupo, vacina: vacina, lote: lote})
     };
 
     return (

@@ -63,7 +63,7 @@ function LoginPage() {
             }).then((response) => response.json().then((json) => {
                 console.log(json);
                 setLoading(false);
-                history.push('/vacinas/selecao', {login: user, grupos: json.data.grupos, vacinas: json.data.vacinas, lotes: json.data.lotes});
+                history.push('/selecao', {login: user, grupos: json.data.grupos, vacinas: json.data.vacinas, lotes: json.data.lotes});
             }))
         }
 
