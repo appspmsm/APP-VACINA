@@ -35,24 +35,14 @@ const useStyles = makeStyles((theme) => ({
         margin: theme.spacing(1),
         position: 'relative',
     },
-    paper: {
-        position: 'absolute',
-        width: 400,
-        backgroundColor: theme.palette.background.paper,
-        border: '2px solid #000',
-        boxShadow: theme.shadows[5],
-        padding: theme.spacing(2, 4, 3),
-
-      },
 }));
 
 function VacinarPage(props) {
     const classes = useStyles();
     const history = useHistory();
-    const [visibility, setVisibility] = React.useState(false);
+    const [visibility, setVisibility] = React.useState(true);
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState(false);
-    const [cpf, setCpf] = React.useState();
     const [nome, setNome] = React.useState();
     const [dn, setDn] = React.useState();
     const [sexo, setSexo] = React.useState();
@@ -61,13 +51,19 @@ function VacinarPage(props) {
     const time = new Date();
     const [open, setOpen] = React.useState(false);
     const [modalDose, setModalDose] = React.useState('');
-    const [loadingModal, setLoadingModal] = React.useState(false);
-    const styles = { 
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)'
-    };
 
+    const body = (
+        <div>
+          <h2 id="simple-modal-title">Cadastrar {modalDose}ª dose</h2>
+          <div id="simple-modal-description">
+            <p>Grupo: {props.location.state.grupo}</p>
+            <p>Vacina: {props.location.state.vacina}</p>
+            <p>Lote: {props.location.state.lote}</p>
+            <p>Data: {time.toLocaleDateString()}</p>
+            <Button>Confirmar</Button>
+          </div>
+        </div>
+      );
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -85,13 +81,12 @@ function VacinarPage(props) {
             }).then((response) => response.json().then((json) => {
                 console.log(json);
                 if(json.success){
-                    setCpf(json.paciente[0]);
                     setNome(json.paciente[1]);
                     setDn(json.paciente[2]);
                     setSexo(json.paciente[3]);
                     setDose1(json.dose1[0]);
                     setDose2(json.dose2[0]);
-                    setVisibility(true);
+                    //setVisibility(true);
                 }else{
                     setError(true);
                 }
@@ -101,47 +96,8 @@ function VacinarPage(props) {
 
     }
 
-    const handleCadastro = () => {
-        if(!loadingModal){
-            setLoadingModal(true);
-            const params = new URLSearchParams();
-            params.append('login', props.location.state.login);
-            params.append('cpf', cpf);
-            params.append('time', time);
-            params.append('grupo', props.location.state.grupo);
-            params.append('vacina', props.location.state.vacina);
-            params.append('lote', props.location.state.lote);
-            params.append('dose', modalDose);
-            params.append('type', 'setVacinacao');
-            fetch(getURL(), {
-                method: 'post',
-                redirect: 'follow',
-                body: params
-            }).then((response) => response.json().then((json) => {
-                console.log(json);
-                if(json.success){
-                    if(modalDose===1) {
-                        setDose1([props.location.state.login, cpf, time, props.location.state.grupo, props.location.state.vacina, props.location.state.lote]);
-                    } else if(modalDose === 2) {
-                        setDose2([props.location.state.login, cpf, time, props.location.state.grupo, props.location.state.vacina, props.location.state.lote]);
-                    }
-                    handleClose();
-                }else{
-                    alert('Erro no cadastro')
-                }
-                setLoadingModal(false);
-                setLoading(false);
-            }))
-        }
-    }
-
-    const handleDose1 = () => {
-        setModalDose(1);
-        handleOpen();
-    }
-
-    const handleDose2 = () => {
-        setModalDose(2);
+    const handleDose = (numero) => {
+        setModalDose(numero);
         handleOpen();
     }
 
@@ -152,26 +108,6 @@ function VacinarPage(props) {
       const handleClose = () => {
         setOpen(false);
       };
-
-    const body = (
-        <div style={styles} className={classes.paper}>
-          <h2 id="simple-modal-title">Cadastrar {modalDose}ª dose</h2>
-          <div id="simple-modal-description">
-            <p>Grupo: {props.location.state.grupo}</p>
-            <p>Vacina: {props.location.state.vacina}</p>
-            <p>Lote: {props.location.state.lote}</p>
-            <p>Data: {time.toLocaleDateString()}</p>
-            <div className={classes.divCenter}>
-                <Button variant="contained"
-                        color="primary"
-                        className={classes.button}
-                        disabled={loadingModal}
-                        onClick={handleCadastro}>Confirmar</Button>
-            </div>
-          </div>
-        </div>
-      );
-
 
 
     return (
@@ -221,8 +157,7 @@ function VacinarPage(props) {
                             <Button variant="contained"
                                 color="primary"
                                 className={classes.button}
-                                onClick={handleDose1}
-                                >
+                                onClick={handleDose(1)}>
                                 Cadastrar 1ª Dose
                             </Button>
                         </div>
@@ -241,8 +176,7 @@ function VacinarPage(props) {
                             <Button variant="contained"
                                 color="primary"
                                 className={classes.button}
-                                onClick={handleDose2}
-                                >
+                                onClick={handleDose(2)}>
                                 Cadastrar 2ª Dose
                             </Button>
                         </div>

@@ -1,3 +1,4 @@
+import React from 'react';
 import Container from '@material-ui/core/Container';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -7,6 +8,8 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
+import { CircularProgress } from '@material-ui/core';
+import { getURL } from '../adapters/api-planilha';
 
 const useStyles = makeStyles((theme) => ({
     paper: {
@@ -22,6 +25,18 @@ const useStyles = makeStyles((theme) => ({
     submit: {
         margin: theme.spacing(3, 0, 2),
     },
+    buttonProgress: {
+        color: 'blue',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        marginTop: -12,
+        marginLeft: -12,
+    },
+    wrapper: {
+        margin: theme.spacing(1),
+        position: 'relative',
+    },
 }));
 
 
@@ -29,13 +44,29 @@ const useStyles = makeStyles((theme) => ({
 function LoginPage() {
     const classes = useStyles();
     const history = useHistory();
+    const [loading, setLoading] = React.useState(false);
 
     function doLogin(e) {
         e.preventDefault();
         const user = e.target.elements.user.value;
         const password = e.target.elements.password.value;
-        console.log(user + password);
-        history.push('/vacinas/selecao');
+        if(!loading) {
+            setLoading(true);
+            const params = new URLSearchParams();
+            params.append('login', user);
+            params.append('password', password);
+            params.append('type', 'doLogin');
+            fetch(getURL(), {
+                method: 'post',
+                redirect: 'follow',
+                body: params
+            }).then((response) => response.json().then((json) => {
+                console.log(json);
+                setLoading(false);
+                history.push('/vacinas/selecao', {login: user, grupos: json.data.grupos, vacinas: json.data.vacinas, lotes: json.data.lotes});
+            }))
+        }
+
     }
 
     return (
@@ -73,15 +104,19 @@ function LoginPage() {
                         id="password"
                         autoComplete="current-password"
                     />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        color="primary"
-                        className={classes.submit}
-                    >
-                        Entrar
-          </Button>
+                    <div className={classes.wrapper}>
+                        <Button
+                            type="submit"
+                            fullWidth
+                            variant="contained"
+                            color="primary"
+                            disabled={loading}
+                            className={classes.submit}
+                        >
+                            Entrar
+                        </Button>
+                        {loading && <CircularProgress size={24} className={classes.buttonProgress} />}
+                    </div>
                 </form>
             </Container>
         </div>

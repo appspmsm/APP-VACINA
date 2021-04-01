@@ -25,14 +25,15 @@ const useStyles = makeStyles((theme) => ({
 
 function ListaVacinadosPage(props) {
     const classes = useStyles();
+    const login = props.location.state.login;
     const grupo = props.location.state.grupo;
     const vacina = props.location.state.vacina;
     const lote = props.location.state.lote;
-    const vacinados = getVacinados();
+    const vacinados = [];
     const history = useHistory();
 
     const handleAdd = () => {
-        history.push('/vacinas/vacinar')
+        history.push('/vacinas/vacinar', {login: login, grupo: grupo, vacina: vacina, lote: lote})
     };
 
     return (

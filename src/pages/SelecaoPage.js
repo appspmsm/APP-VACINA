@@ -42,16 +42,18 @@ const useStyles = makeStyles((theme) => ({
 
 
 
-function SelecaoPage() {
+function SelecaoPage(props) {
   const classes = useStyles();
   const [activeStep, setActiveStep] = React.useState(0);
   const steps = ['Selecione o grupo', 'Selecione a vacina', 'Selecione o lote'];
   const [grupo, setGrupo] = React.useState('');
   const [vacina, setVacina] = React.useState('');
   const [lote, setLote] = React.useState('');
-  const grupos = getGrupos();
-  const vacinas = getVacinas();
-  const lotes = getLotes();
+  console.log(props.location.state)
+  const login = props.location.state.login;
+  const grupos = props.location.state.grupos;
+  const vacinas = props.location.state.vacinas;
+  const lotes = props.location.state.lotes;
   const stepSelects = [grupo, vacina, lote];
   const history = useHistory();
 
@@ -76,7 +78,7 @@ function SelecaoPage() {
   };
 
   const handleConfirmation = (event) => {
-    history.push('/vacinas/listavacinados', {grupo: grupo, vacina: vacina, lote: lote});
+    history.push('/vacinas/listavacinados', {login: login, grupo: grupo, vacina: vacina, lote: lote});
 
   }
 

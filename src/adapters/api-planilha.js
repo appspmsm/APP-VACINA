@@ -18,3 +18,11 @@ export const getVacinados = () => {
         {nome: 'Maria da Silva', cpf: '21412421487'}
     ]
 }
+
+export const getCpf = () => {
+    return []
+}
+
+export const getURL = () => {
+    return 'https://script.google.com/macros/s/AKfycbxkQf1wEUKHZoB6kbYA_YPHOioUhUAPiW2ctj83G83iNhuvTT9eig_-R38xZkui8Fk_OA/exec'
+}
