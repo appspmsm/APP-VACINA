@@ -1,7 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Container from '@material-ui/core/Container';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -13,8 +11,10 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import { makeStyles } from '@material-ui/core/styles';
-import { getGrupos, getVacinas, getLotes } from '../adapters/api-planilha';
 import { useHistory } from 'react-router-dom';
+import { getURL } from '../adapters/api-planilha';
+import { Backdrop, CircularProgress } from '@material-ui/core';
+import AppToolbar from '../components/AppToolbar';
 
 const useStyles = makeStyles((theme) => ({
   stepper: {
@@ -38,6 +38,10 @@ const useStyles = makeStyles((theme) => ({
     width: 120,
     'margin-left': '-60px'
   },
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: '#fff',
+  },
 }));
 
 
@@ -49,13 +53,44 @@ function SelecaoPage(props) {
   const [grupo, setGrupo] = React.useState('');
   const [vacina, setVacina] = React.useState('');
   const [lote, setLote] = React.useState('');
-  console.log(props.location.state)
-  const login = props.location.state.login;
-  const grupos = props.location.state.grupos;
-  const vacinas = props.location.state.vacinas;
-  const lotes = props.location.state.lotes;
+  const [grupos, setGrupos] = React.useState([]);
+  const [vacinas, setVacinas] = React.useState([]);
+  const [lotes, setLotes] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
   const stepSelects = [grupo, vacina, lote];
   const history = useHistory();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if(token){
+      setLoading(true);
+      const params = new URLSearchParams();
+      params.append('token', token);
+      params.append('type', 'getGrupoVacinaLote')
+      fetch(getURL(), {
+        method: 'post',
+        redirect: 'follow',
+        body: params
+      }).then((response) => response.json().then((json) => {
+          console.log(json);
+          setLoading(false);
+          if(json.success){
+              setGrupos(json.grupos);
+              setVacinas(json.vacinas);
+              setLotes(json.lotes);
+          } else {
+              localStorage.removeItem('token');
+              history.push('/');
+          }
+      })).catch(e => {
+          console.log(e);
+          setLoading(false);
+          alert('Não foi possível conectar ao servidor.')
+      });
+    } else {
+      history.push('/');
+    }
+  }, [])
 
   const handleNext = () => {
     setActiveStep((prevStep)=>prevStep+1);
@@ -78,7 +113,7 @@ function SelecaoPage(props) {
   };
 
   const handleConfirmation = (event) => {
-    history.push('/listavacinados', {login: login, grupo: grupo, vacina: vacina, lote: lote});
+    history.push('/listavacinados', {grupo: grupo, vacina: vacina, lote: lote});
 
   }
 
@@ -141,14 +176,11 @@ function SelecaoPage(props) {
   return (
     
     <div>
+    <Backdrop className={classes.backdrop} open={loading}>
+        <CircularProgress color="inherit" />
+    </Backdrop>
     <CssBaseline />
-          <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" className={classes.title}>
-            Vacinas
-          </Typography>
-        </Toolbar>
-      </AppBar>
+          <AppToolbar/>
 
         {activeStep === steps.length ? (
           <Container>

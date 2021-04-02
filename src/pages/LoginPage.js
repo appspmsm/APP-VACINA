@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Container from '@material-ui/core/Container';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -45,11 +45,21 @@ function LoginPage() {
     const classes = useStyles();
     const history = useHistory();
     const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState();
+
+    useEffect(() => {
+        const login = localStorage.getItem('login');
+        const token = localStorage.getItem('token');
+        if(login && token){
+            history.push('/selecao')
+        }
+    }, []);
 
     function doLogin(e) {
         e.preventDefault();
         const user = e.target.elements.user.value;
         const password = e.target.elements.password.value;
+        setError(null);
         if(!loading) {
             setLoading(true);
             const params = new URLSearchParams();
@@ -63,8 +73,18 @@ function LoginPage() {
             }).then((response) => response.json().then((json) => {
                 console.log(json);
                 setLoading(false);
-                history.push('/selecao', {login: user, grupos: json.data.grupos, vacinas: json.data.vacinas, lotes: json.data.lotes});
-            }))
+                if(json.success){
+                    localStorage.setItem('login', user);
+                    localStorage.setItem('token', json.token);
+                    history.push('/selecao');
+                } else {
+                    setError(json.message);
+                }
+            })).catch(e => {
+                console.log(e);
+                setLoading(false);
+                alert('Não foi possível conectar ao servidor.')
+            });
         }
 
     }
@@ -92,6 +112,7 @@ function LoginPage() {
                         name="user"
                         autoComplete="user"
                         autoFocus
+                        error={!!error}
                     />
                     <TextField
                         variant="outlined"
@@ -103,6 +124,7 @@ function LoginPage() {
                         type="password"
                         id="password"
                         autoComplete="current-password"
+                        error={!!error} helperText={error ? error: ""}
                     />
                     <div className={classes.wrapper}>
                         <Button

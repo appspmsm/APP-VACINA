@@ -1,13 +1,12 @@
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { Button, CircularProgress, Divider,Modal, TextField } from '@material-ui/core';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getURL } from '../adapters/api-planilha';
 import { makeStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 import { useHistory } from 'react-router';
+import AppToolbar from '../components/AppToolbar';
 
 const useStyles = makeStyles((theme) => ({
     divCenter: {
@@ -58,6 +57,10 @@ function VacinarPage(props) {
     const [sexo, setSexo] = React.useState();
     const [dose1, setDose1] = React.useState();
     const [dose2, setDose2] = React.useState();
+    const [grupo, setGrupo] = React.useState();
+    const [vacina, setVacina] = React.useState();
+    const [lote, setLote] = React.useState();
+    const [login, setLogin] = React.useState();
     const time = new Date();
     const [open, setOpen] = React.useState(false);
     const [modalDose, setModalDose] = React.useState('');
@@ -67,6 +70,23 @@ function VacinarPage(props) {
         left: '50%',
         transform: 'translate(-50%, -50%)'
     };
+
+    useEffect(()=> {
+        const token = localStorage.getItem('token');
+        const loginStorage = localStorage.getItem('login');
+        if(token && loginStorage){
+            setLogin(loginStorage);
+            if(props.location.state){
+                setGrupo(props.location.state.grupo);
+                setVacina(props.location.state.vacina);
+                setLote(props.location.state.lote);
+            } else {
+                history.push('/selecao')
+            }
+        } else {
+            history.push('/');
+        }
+    }, [])
 
 
     const handleSearch = (e) => {
@@ -105,12 +125,12 @@ function VacinarPage(props) {
         if(!loadingModal){
             setLoadingModal(true);
             const params = new URLSearchParams();
-            params.append('login', props.location.state.login);
+            params.append('login', login);
             params.append('cpf', cpf);
             params.append('time', time);
-            params.append('grupo', props.location.state.grupo);
-            params.append('vacina', props.location.state.vacina);
-            params.append('lote', props.location.state.lote);
+            params.append('grupo', grupo);
+            params.append('vacina', vacina);
+            params.append('lote', lote);
             params.append('dose', modalDose);
             params.append('type', 'setVacinacao');
             fetch(getURL(), {
@@ -121,9 +141,9 @@ function VacinarPage(props) {
                 console.log(json);
                 if(json.success){
                     if(modalDose===1) {
-                        setDose1([props.location.state.login, cpf, time, props.location.state.grupo, props.location.state.vacina, props.location.state.lote]);
+                        setDose1([login, cpf, time, grupo, vacina, lote]);
                     } else if(modalDose === 2) {
-                        setDose2([props.location.state.login, cpf, time, props.location.state.grupo, props.location.state.vacina, props.location.state.lote]);
+                        setDose2([login, cpf, time, grupo, vacina, lote]);
                     }
                     handleClose();
                 }else{
@@ -157,9 +177,9 @@ function VacinarPage(props) {
         <div style={styles} className={classes.paper}>
           <h2 id="simple-modal-title">Cadastrar {modalDose}ª dose</h2>
           <div id="simple-modal-description">
-            <p>Grupo: {props.location.state.grupo}</p>
-            <p>Vacina: {props.location.state.vacina}</p>
-            <p>Lote: {props.location.state.lote}</p>
+            <p>Grupo: {grupo}</p>
+            <p>Vacina: {vacina}</p>
+            <p>Lote: {lote}</p>
             <p>Data: {time.toLocaleDateString()}</p>
             <div className={classes.divCenter}>
                 <Button variant="contained"
@@ -177,13 +197,7 @@ function VacinarPage(props) {
     return (
         <div>
             <CssBaseline />
-                <AppBar position="static">
-                    <Toolbar>
-                        <Typography variant="h6">
-                        Vacinas
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
+                <AppToolbar backButton/>
                 <div className={classes.divCenter}>
                     <Typography variant="h6">Buscar paciente</Typography>
                     <form onSubmit={handleSearch}>
