@@ -80,6 +80,9 @@ function VacinarPage(props) {
                 setGrupo(props.location.state.grupo);
                 setVacina(props.location.state.vacina);
                 setLote(props.location.state.lote);
+                if(props.location.state.cpf){
+                    handleSearch(null, props.location.state.cpf);
+                }
             } else {
                 history.push('/selecao')
             }
@@ -89,9 +92,14 @@ function VacinarPage(props) {
     }, [])
 
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        const cpf = e.target.elements.cpf.value;
+    const handleSearch = (e, cpfFromList=null) => {
+        let cpf;
+        if(cpfFromList){
+            cpf = cpfFromList;
+        } else {
+            e.preventDefault();
+            cpf = e.target.elements.cpf.value;
+        }
         if(!loading) {
             setLoading(true);
             setError(false);
@@ -201,7 +209,7 @@ function VacinarPage(props) {
                 <div className={classes.divCenter}>
                     <Typography variant="h6">Buscar paciente</Typography>
                     <form onSubmit={handleSearch}>
-                        <TextField className={classes.tfCpf} id="cpf" label="CPF" name="cpf" error={error} helperText={error ? "CPF não encontrado.": ""} />
+                        <TextField className={classes.tfCpf} id="cpf" label="CPF (somente números)" name="cpf" inputProps={{ maxLength: 11 }} error={error} helperText={error ? "CPF não encontrado.": ""} />
                         <div className={classes.wrapper}>
                         <Button
                             variant="contained"
