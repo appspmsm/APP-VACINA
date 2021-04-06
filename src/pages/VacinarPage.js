@@ -98,7 +98,7 @@ function VacinarPage(props) {
             cpf = cpfFromList;
         } else {
             e.preventDefault();
-            cpf = e.target.elements.cpf.value;
+            cpf = e.target.elements.cpf.value.replace(/\D/g, '');
         }
         if(!loading) {
             setLoading(true);
@@ -177,9 +177,22 @@ function VacinarPage(props) {
         setOpen(true);
       };
     
-      const handleClose = () => {
+    const handleClose = () => {
         setOpen(false);
       };
+
+    const cpfMask = value => {
+        return value
+          .replace(/\D/g, '')
+          .replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d)/, '$1.$2')
+          .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+          .replace(/(-\d{2})\d+?$/, '$1')
+    }
+
+    const handleOnChange = e => {
+        e.target.value = cpfMask(e.target.value);
+    }
 
     const body = (
         <div style={styles} className={classes.paper}>
@@ -205,11 +218,11 @@ function VacinarPage(props) {
     return (
         <div>
             <CssBaseline />
-                <AppToolbar backButton/>
+                <AppToolbar backButton logoutButton/>
                 <div className={classes.divCenter}>
                     <Typography variant="h6">Buscar paciente</Typography>
                     <form onSubmit={handleSearch}>
-                        <TextField className={classes.tfCpf} id="cpf" label="CPF (somente números)" name="cpf" inputProps={{ maxLength: 11 }} error={error} helperText={error ? "CPF não encontrado.": ""} />
+                        <TextField className={classes.tfCpf} id="cpf" label="CPF" name="cpf" inputProps={{ maxLength: 14 }} error={error} helperText={error ? "CPF não encontrado.": ""} onChange={handleOnChange} />
                         <div className={classes.wrapper}>
                         <Button
                             variant="contained"
