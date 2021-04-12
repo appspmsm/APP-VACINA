@@ -12,6 +12,7 @@ import { ExpirationPlugin } from 'workbox-expiration';
 import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { StaleWhileRevalidate } from 'workbox-strategies';
+import { Dexie } from 'dexie';
 
 clientsClaim();
 
@@ -70,3 +71,34 @@ self.addEventListener('message', (event) => {
 });
 
 // Any other custom service worker logic can go here.
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sendVacinacao') {
+    event.waitUntil(sendVacinacao());
+  }
+});
+
+async function sendVacinacao() {
+  try {
+    const db = new Dexie('Vacinas');
+    const vacinacoes = await db.vacinacoes.toArray();
+    vacinacoes.foreach(async (vacinacao) => {
+      const params = new URLSearchParams();
+      params.append('login', vacinacao.login);
+      params.append('cpf', vacinacao.cpf);
+      params.append('time', vacinacao.time);
+      params.append('grupo', vacinacao.grupo);
+      params.append('vacina', vacinacao.vacina);
+      params.append('lote', vacinacao.lote);
+      params.append('dose', vacinacao.dose);
+      params.append('type', 'setVacinacao');
+      let response = await fetch('https://script.google.com/macros/s/AKfycbxkQf1wEUKHZoB6kbYA_YPHOioUhUAPiW2ctj83G83iNhuvTT9eig_-R38xZkui8Fk_OA/exec', {
+        method: 'post',
+        redirect: 'follow',
+        body: params
+      });
+    });
+  } catch(err) {
+    throw err;
+  }
+
+}

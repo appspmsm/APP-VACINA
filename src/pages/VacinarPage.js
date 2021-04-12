@@ -7,6 +7,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import SearchIcon from '@material-ui/icons/Search';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
+import Dexie from 'dexie';
 
 const useStyles = makeStyles((theme) => ({
     divCenter: {
@@ -159,7 +160,37 @@ function VacinarPage(props) {
                 }
                 setLoadingModal(false);
                 setLoading(false);
-            }))
+            })).catch( err => {
+                console.log(err.message);
+                const db = new Dexie('Vacinas');
+                db.version(1).stores({
+                    vacinacoes: 'login, cpf, time, grupo, vacina, lote, dose'
+                })
+                db.vacinacoes.add({
+                    login: login,
+                    cpf: cpf,
+                    time: time,
+                    grupo: grupo,
+                    vacina: vacina,
+                    lote: lote,
+                    dose: modalDose
+                }).then(response => {
+                    if('serviceWorker' in navigator && 'SyncManager' in window) {
+                        navigator.serviceWorker.ready.then(function(reg) {
+                          return reg.sync.register('sendVacinacao');
+                        }).catch(function() {
+                          // system was unable to register for a sync,
+                          // this could be an OS-level restriction
+                          alert('Erro no envio do registro de vacinação');
+                        });
+                      } else {
+                        // serviceworker/sync not supported
+                        alert('Erro no envio do registro de vacinação');
+                      }
+                    }
+                );
+
+            });
         }
     }
 
