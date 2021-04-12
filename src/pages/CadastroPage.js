@@ -98,8 +98,8 @@ function CadastroPage(props) {
                     <Button onClick={handleConfirmarButton}>Confirmar</Button>
                 </ButtonGroup>
                 <TextField fullWidth className={classes.textField} label="Nome" value={nome} onChange={handleNomeChange}></TextField>
-                <TextField fullWidth className={classes.textField} label="Data de Nascimento" inputMode="numeric" onChange={handleDnChange}></TextField>
-                <TextField fullWidth className={classes.textField} label="CPF" inputMode="numeric" onChange={handleCPFChange}></TextField>
+                <TextField fullWidth className={classes.textField} label="Data de Nascimento" inputProps={{ inputMode:"numeric" }} onChange={handleDnChange}></TextField>
+                <TextField fullWidth className={classes.textField} label="CPF" inputProps={{ inputMode:"numeric" }} onChange={handleCPFChange}></TextField>
                 <Button variant="contained" color="primary" className={classes.button}>Enviar</Button>
             </div>
             <div>
