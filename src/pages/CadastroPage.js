@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
-import { Button, ButtonGroup, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Step, StepLabel, Stepper, TextField, Typography } from '@material-ui/core';
+import { Button, ButtonGroup, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Hidden, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
 import { cpfMask, dnMask } from '../util/mask';
 import handwriting from '../util/handwriting.canvas';
 import { getURL } from '../adapters/api-planilha';
@@ -48,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
     keyboard: {
       position: 'absolute',
       width: '100%',
-      bottom: 0
+      bottom: 0,
     },
     error: {
       color: 'red'
@@ -73,6 +73,7 @@ function CadastroPage(props) {
     const [layout, setLayout] = React.useState("default");
     const [inputName, setInputName] = React.useState("nameInput");
     const [dialogOpen, setDialogOpen] = React.useState(false);
+    const matches = useMediaQuery('(min-height:590px)');
     
     useEffect(() => {
       const token = localStorage.getItem('token');
@@ -257,18 +258,19 @@ function CadastroPage(props) {
     return (
         <div>
         <AppToolbar logoutButton/>
-        <div className={classes.stepper}>
-          <Stepper activeStep={activeStep} alternativeLabel>
-            {steps.map((label, index) => {
-              const stepProps = {};
-              return (
-                <Step key={label} {...stepProps}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              );
-            })}
-          </Stepper>
-        </div>
+        {matches &&
+          <div className={classes.stepper}>
+            <Stepper activeStep={activeStep} alternativeLabel>
+              {steps.map((label, index) => {
+                const stepProps = {};
+                return (
+                  <Step key={label} {...stepProps}>
+                    <StepLabel>{label}</StepLabel>
+                  </Step>
+                );
+              })}
+            </Stepper>
+          </div>}
         {activeStep === steps.length ? (
             <div>
               <Typography>Nome: {nome ? nome : <span className={classes.error}>Não Preenchido</span>}</Typography>
