@@ -50,6 +50,9 @@ const useStyles = makeStyles((theme) => ({
       width: '100%',
       bottom: 0,
     },
+    kbTheme: {
+      fontSize: '23px'
+    },
     error: {
       color: 'red'
     }
@@ -61,7 +64,7 @@ function CadastroPage(props) {
     const [cpf, setCpf] = React.useState('');
     const [nome, setNome] = React.useState('');
     const [dn, setDn] = React.useState('');
-    const canvas = React.useRef();
+    const [canvas, setCanvas] = React.useState();
     const canvasAssinatura = React.useRef();
     let nameCanvas = React.useRef();
     let assinaturaCanvas = React.useRef();
@@ -100,9 +103,13 @@ function CadastroPage(props) {
     }
 
     const handleNext = () => {
-        setInputName(getInputName(activeStep+1));
-        setActiveStep((prevStep)=>prevStep+1);
-        setLayout('numeric');
+      if(activeStep === 3){
+        setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
+      }
+      setInputName(getInputName(activeStep+1));
+      setActiveStep((prevStep)=>prevStep+1);
+      setLayout('numeric');
+        
       }
     
     const handleBack = () => {
@@ -163,9 +170,6 @@ function CadastroPage(props) {
     }
 
     const kbOnKeyPress = (button) => {
-      if(button !== '{shift}' && layout === 'shift'){
-        handleShift();
-      }
       switch(button){
         case '{prox}':
           handleNext();
@@ -196,25 +200,25 @@ function CadastroPage(props) {
           case 0:
             return (
                 <div className={classes.divCenter}>
-                  <TextField fullWidth id="nameInput" className={classes.textField} label="Nome" value={nome} inputProps={{ inputMode:"none" }} onChange={handleNomeChange}></TextField>
+                  <TextField fullWidth id="nameInput" className={classes.textField} label="Nome" value={nome} inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} onChange={handleNomeChange}></TextField>
                 </div>
             );
           case 1:
             return (
               <div className={classes.divCenter}>
-                <TextField fullWidth id="dnInput" className={classes.textField} label="Data de Nascimento" inputProps={{ inputMode:"none" }} onChange={handleDnChange} value={dn}></TextField>
+                <TextField fullWidth id="dnInput" className={classes.textField} label="Data de Nascimento" inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} onChange={handleDnChange} value={dn}></TextField>
               </div>
             );
           case 2:
             return (
               <div className={classes.divCenter}>
-                  <TextField fullWidth id="cpfInput" className={classes.textField} label="CPF" inputProps={{ inputMode:"none" }} onChange={handleCPFChange} value={cpf}></TextField>
+                  <TextField fullWidth id="cpfInput" className={classes.textField} label="CPF" inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} onChange={handleCPFChange} value={cpf}></TextField>
               </div>
             );
           case 3:
             return (
               <div className={classes.divCenter}>
-                  <HandwriteCanvas setCanvasData={setCanvasData}></HandwriteCanvas>
+                  <HandwriteCanvas setCanvas={setCanvas}></HandwriteCanvas>
                   <div className={classes.buttons}>
                 <Button disabled={activeStep === 0} onClick={handleBack}>
                   Voltar
@@ -301,17 +305,17 @@ function CadastroPage(props) {
           {activeStep < 3 && <div className={classes.keyboard}>
         <Keyboard
           layout={{
-            default:[
+            shift:[
               "q w e r t y u i o p", 
               "a s d f g h j k l ç", 
               "z x c v b n m {backspace}",
               "{shift} {space} {prox}"
             ],
-            shift:[
+            default:[
               "Q W E R T Y U I O P", 
               "A S D F G H J K L Ç", 
               "Z X C V B N M {backspace}",
-              "{shift} {space} {prox}"
+              "{space} [{prox}]"
             ],
             numeric:[
               "1 2 3",
@@ -328,11 +332,20 @@ function CadastroPage(props) {
             "{space}": " ",
             "{backspace}": "⌫"
           }}
+          buttonAttributes={[
+            {
+              attribute: 'style',
+              value: 'flex-basis:68%',
+              buttons: '{space} 0'
+            }
+          ]}
+          theme={classes.kbTheme + " hg-theme-default"}
           layoutName={layout}
           onChange={kbOnChange}
           onKeyPress={kbOnKeyPress}
           keyboardRef={r => (nameKb.current = r)}
           inputName={inputName}
+          useMouseEvents={true}
         />
         </div>} 
         <Dialog

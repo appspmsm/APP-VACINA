@@ -4,7 +4,7 @@ import handwriting from "../util/handwriting.canvas";
 
 const useStyles = makeStyles((theme) => ({
     btGroup: {
-        paddingTop: '10px'
+        marginTop: '10px'
     },
     canvas: {
         display: 'block',
@@ -39,6 +39,7 @@ function HandwriteCanvas(props) {
             language: 'pt_BR'
         });
         handwritingCanvas.current.setCallBack(handleCallback);
+        props.setCanvas(canvas);
     }, [canvas])
 
     const handleApagarButton = (e) => {
@@ -52,10 +53,11 @@ function HandwriteCanvas(props) {
     return (
     <div>
         <canvas ref={canvas} className={classes.canvas} width={300} height={300}></canvas>
-        <ButtonGroup color="primary" aria-label="outlined primary button group" className={classes.btGroup}>
+        <Button onClick={handleApagarButton} variant="outlined" color="primary" className={classes.btGroup}>Apagar</Button>
+        {/*<ButtonGroup color="primary" aria-label="outlined primary button group" className={classes.btGroup}>
             <Button onClick={handleApagarButton}>Apagar</Button>
             <Button onClick={handleConfirmarButton}>Confirmar</Button>
-        </ButtonGroup>
+    </ButtonGroup>*/}
     </div>);
 }
 
