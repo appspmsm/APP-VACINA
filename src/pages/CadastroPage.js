@@ -2,13 +2,15 @@ import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
-import { Button, ButtonGroup, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Hidden, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
+import { Button, ButtonGroup, CircularProgress, Container, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Hidden, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
 import { cpfMask, dnMask } from '../util/mask';
 import handwriting from '../util/handwriting.canvas';
 import { getURL } from '../adapters/api-planilha';
 import HandwriteCanvas from '../components/HandwriteCanvas';
 import Keyboard from 'react-simple-keyboard';
 import "react-simple-keyboard/build/css/index.css";
+import Dexie from 'dexie';
+import { validateCPF, validateDate } from '../util/validacao';
 
 const useStyles = makeStyles((theme) => ({
     divCenter: {
@@ -55,7 +57,15 @@ const useStyles = makeStyles((theme) => ({
     },
     error: {
       color: 'red'
-    }
+    },
+    progress: {
+      color: 'blue',
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      marginTop: -12,
+      marginLeft: -12,
+  },
 }));
 
 function CadastroPage(props) {
@@ -64,10 +74,9 @@ function CadastroPage(props) {
     const [cpf, setCpf] = React.useState('');
     const [nome, setNome] = React.useState('');
     const [dn, setDn] = React.useState('');
+    const [cpfError, setCpfError] = React.useState(false);
+    const [dnError, setDnError] = React.useState(false);
     const [canvas, setCanvas] = React.useState();
-    const canvasAssinatura = React.useRef();
-    let nameCanvas = React.useRef();
-    let assinaturaCanvas = React.useRef();
     const [canvasData, setCanvasData] = React.useState();
     const [activeStep, setActiveStep] = React.useState(0);
     const steps = ['Nome', 'Data de nascimento', 'CPF', 'Assinatura'];
@@ -76,12 +85,20 @@ function CadastroPage(props) {
     const [layout, setLayout] = React.useState("default");
     const [inputName, setInputName] = React.useState("nameInput");
     const [dialogOpen, setDialogOpen] = React.useState(false);
+    const [token, setToken] = React.useState();
+    const [loading, setLoading] = React.useState(false);
     const matches = useMediaQuery('(min-height:590px)');
+    const db = new Dexie('Cadastros');
+    db.version(1).stores({
+      cadastros: '++id, cpf, status'
+    });
     
     useEffect(() => {
-      const token = localStorage.getItem('token');
-      if(!token){
+      const lsToken = localStorage.getItem('token');
+      if(!lsToken){
         history.push('/');
+      }else{
+        setToken(lsToken);
       }
     }, [])
 
@@ -91,15 +108,22 @@ function CadastroPage(props) {
     }
 
     const handleCPFChange = (e) => {
+      console.log(e.target.value);
         e.target.value = cpfMask(e.target.value);
+        if(e.target.value.length === 14 && validateCPF(e.target.value)){
+          setCpfError(true);
+        }
         setCpf(e.target.value);
-        console.log(cpf);
     }
 
     const handleDnChange = (e) => {
+        console.log(e.target.value);
         e.target.value = dnMask(e.target.value);
+        console.log(e.target.value);
+        if(e.target.value.length === 8 && validateDate(e.target.value)){
+          setDnError(true);
+        }
         setDn(e.target.value);
-        console.log(dn);
     }
 
     const handleNext = () => {
@@ -129,9 +153,21 @@ function CadastroPage(props) {
       }
     }
 
+    const addCadastroIdb = (status) => {
+      return db.cadastros.add({
+        nome: nome,
+        dn: dn,
+        cpf: cpf,
+        assinatura: canvasData,
+        time: new Date(Date.now()).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}),
+        status: status,
+        token: token
+      })
+    }
+
     const handleConfirmation = () => {
-      if(nome && dn.length === 10 && cpf.length === 14 && canvasData){
-        const token = localStorage.getItem('token');
+      if(nome && validateDate(dn) && validateCPF(cpf) && canvasData){
+        setLoading(true);
         const params = new URLSearchParams();
         params.append('token', token);
         params.append('nome', nome);
@@ -139,15 +175,46 @@ function CadastroPage(props) {
         params.append('cpf', cpf);
         params.append('type', 'setCadastro');
         params.append('assinatura', canvasData);
+        params.append('time', new Date(Date.now()).toLocaleString('pt-BR', {timeZone:'America/Sao_Paulo'}))
         fetch(getURL(), {
           method: 'post',
           redirect: 'follow',
           body: params
-        }).then((response) => response.json().then((json) => {
-          if(json.success){
-            console.log(json);
-          }
-        }));
+        }).then((response) => {
+          response.json().then((json) => {
+            if(json.success){
+              addCadastroIdb('ok');
+              setLoading(false);
+              history.push('/cadastros');
+            }else{
+              //requisição invalida
+            }
+          })
+        }).catch(err => {
+          console.log(err);
+          addCadastroIdb('pend').then(response => {
+              if('serviceWorker' in navigator && 'SyncManager' in window) {
+                  navigator.serviceWorker.ready.then(function(reg) {
+                    reg.sync.register('sendCadastros');
+                    setLoading(false);
+                    history.push('/cadastros');
+                  }).catch((e) => {
+                    // system was unable to register for a sync,
+                    // this could be an OS-level restriction
+                    setLoading(false);
+                    alert('Não foi possível armazenar o cadastro para envio offline');
+                  });
+                } else {
+                  // serviceworker/sync not supported
+                  setLoading(false);
+                  alert('Não foi possível armazenar o cadastro para envio offline');
+                }
+              }
+          ).catch((e)=>{
+            setLoading(false);
+            alert('Não foi possível armazenar o cadastro para envio offline');
+          });
+        });
       }else{
         setDialogOpen(true);
       }
@@ -159,10 +226,22 @@ function CadastroPage(props) {
           setNome(input);
           break;
         case 1: 
-          setDn(dnMask(input));
+          const maskdn = dnMask(input);
+          if(maskdn.length === 10 && !validateDate(maskdn)){
+            setDnError(true);
+          }else if(maskdn.length < 10 || validateDate(maskdn)){
+            setDnError(false);
+          }
+          setDn(maskdn);
           break;
         case 2:
-          setCpf(cpfMask(input));
+          const maskcpf = cpfMask(input);
+          if(maskcpf.length === 14 && !validateCPF(maskcpf)){
+            setCpfError(true);
+          }else if(maskcpf.length < 14 || validateCPF(maskcpf)){
+            setCpfError(false);
+          }
+          setCpf(maskcpf);
           break;
         default: break;
       }
@@ -206,13 +285,32 @@ function CadastroPage(props) {
           case 1:
             return (
               <div className={classes.divCenter}>
-                <TextField fullWidth id="dnInput" className={classes.textField} label="Data de Nascimento" inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} onChange={handleDnChange} value={dn}></TextField>
+                <TextField 
+                error={dnError}
+                fullWidth 
+                id="dnInput" 
+                className={classes.textField} 
+                label="Data de Nascimento"
+                helperText={dnError ? "Data inválida." : ""}
+                inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} 
+                onChange={handleDnChange} 
+                value={dn}>
+                </TextField>
               </div>
             );
           case 2:
             return (
               <div className={classes.divCenter}>
-                  <TextField fullWidth id="cpfInput" className={classes.textField} label="CPF" inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} onChange={handleCPFChange} value={cpf}></TextField>
+                  <TextField 
+                  error={cpfError}
+                  fullWidth 
+                  id="cpfInput" 
+                  className={classes.textField} 
+                  label="CPF" 
+                  helperText={cpfError ? "CPF inválido." : ""}
+                  inputProps={{ inputMode:"none", style:{fontSize:'23px'}}} 
+                  onChange={handleCPFChange} 
+                  value={cpf}></TextField>
               </div>
             );
           case 3:
@@ -261,7 +359,7 @@ function CadastroPage(props) {
 
     return (
         <div>
-        <AppToolbar logoutButton/>
+        <AppToolbar backButton logoutButton/>
         {matches &&
           <div className={classes.stepper}>
             <Stepper activeStep={activeStep} alternativeLabel>
@@ -285,15 +383,17 @@ function CadastroPage(props) {
                 {canvasData && <img src={'data:image/png;base64,' + canvasData} alt="assinatura"></img>}
               </div>
               <div className={classes.buttons}>
-              <Button disabled={activeStep === 0} onClick={handleBack}>
+              <Button disabled={loading} onClick={handleBack}>
                   Voltar
                 </Button>
                 <Button
+                  disabled={loading}
                   variant="contained"
                   color="primary"
                   className={classes.button}
                   onClick={handleConfirmation}
                 >Confirmar</Button>
+                 {loading && <CircularProgress size={24} className={classes.progress} />}
               </div>
             </div>
           ) : (

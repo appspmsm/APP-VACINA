@@ -72,10 +72,46 @@ self.addEventListener('message', (event) => {
 
 // Any other custom service worker logic can go here.
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sendVacinacao') {
-    event.waitUntil(sendVacinacao());
+  if (event.tag === 'sendCadastros') {
+    event.waitUntil(sendCadastros());
   }
 });
+
+async function sendCadastros() {
+  console.log('function sendCadastros');
+  try {
+    const db = new Dexie('Cadastros');
+    db.version(1).stores({
+      cadastros: '++id, cpf, status'
+    });
+    const cadastros = await db.cadastros.where('status').equals('pend').toArray();
+    console.log(cadastros);
+    if(cadastros.length > 0){
+      const token = cadastros[0].token;
+      const params = new URLSearchParams();
+      params.append('cadastros', JSON.stringify(cadastros));
+      params.append('token', token);
+      params.append('type', 'setCadastros');
+      let response = await fetch('https://script.google.com/macros/s/AKfycbxkQf1wEUKHZoB6kbYA_YPHOioUhUAPiW2ctj83G83iNhuvTT9eig_-R38xZkui8Fk_OA/exec', {
+          method: 'post',
+          redirect: 'follow',
+          body: params
+      });
+      let responseJson = await response.json();
+      console.log(responseJson);
+      if(responseJson.success){
+        const cadastrosOk = cadastros.map(cadastro => { return {...cadastro, status: 'ok'}});
+        console.log(cadastrosOk);
+        let update = await db.cadastros.bulkPut(cadastrosOk);
+        console.log(update);
+      }
+    }
+  } catch(err) {
+    console.log(err);
+    throw err;
+  }
+
+}
 
 async function sendVacinacao() {
   try {

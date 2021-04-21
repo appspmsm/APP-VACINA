@@ -4,6 +4,7 @@ import SelecaoPage from './pages/SelecaoPage'
 import ListaVacinadosPage from './pages/ListaVacinadosPage'
 import VacinarPage from "./pages/VacinarPage";
 import CadastroPage from "./pages/CadastroPage";
+import ListaCadastrosPage from "./pages/ListaCadastrosPage";
 
 export const Routes = () => {
     return (
@@ -12,7 +13,8 @@ export const Routes = () => {
             <Route path={'/selecao'} component={SelecaoPage} />
             <Route path={'/listavacinados'} component={ListaVacinadosPage} />
             <Route path={'/vacinar'} component={VacinarPage} />
-            <Route path={'/cadastro'} component={CadastroPage} />
+            <Route path={'/cadastros'} component={ListaCadastrosPage} />
+            <Route path={'/novocadastro'} component={CadastroPage} />
         </Switch>
     )
 }
