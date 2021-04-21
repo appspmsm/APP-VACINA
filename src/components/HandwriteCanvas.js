@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, makeStyles } from "@material-ui/core";
+import { Button, makeStyles } from "@material-ui/core";
 import React, { useEffect } from "react";
 import handwriting from "../util/handwriting.canvas";
 
@@ -40,15 +40,15 @@ function HandwriteCanvas(props) {
         });
         handwritingCanvas.current.setCallBack(handleCallback);
         props.setCanvas(canvas);
-    }, [canvas])
+    }, [])
 
     const handleApagarButton = (e) => {
         handwritingCanvas.current.erase();
     }
   
-    const handleConfirmarButton = (e) => {
+    /*const handleConfirmarButton = (e) => {
         props.setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
-    }
+    }*/
 
     return (
     <div>

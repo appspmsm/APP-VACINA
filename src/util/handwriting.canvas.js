@@ -214,7 +214,7 @@ handwriting.recognize = function(trace, options, callback) {
                     else results = response[1][0][1];
                     if (!!options.numOfWords) {
                         results = results.filter(function(result) {
-                            return (result.length == options.numOfWords);
+                            return (result.length === options.numOfWords);
                         });
                     }
                     if (!!options.numOfReturn) {
