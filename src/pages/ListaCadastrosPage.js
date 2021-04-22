@@ -30,6 +30,8 @@ function ListaCadastrosPage() {
     const history = useHistory();
     const [cadastros, setCadastros] = React.useState([]);
     const [loading, setLoading] = React.useState(false);
+    const [numRegistros, setNumRegistros] = React.useState(0);
+    const [numEnviados, setNumEnviados] = React.useState(0);
     const db = new Dexie('Cadastros');
     db.version(1).stores({
       cadastros: '++id, cpf, status'
@@ -43,6 +45,8 @@ function ListaCadastrosPage() {
         setLoading(true);
         const cadastrosIdb = await db.cadastros.toArray();
         setCadastros(cadastrosIdb);
+        setNumRegistros(cadastrosIdb.length);
+        setNumEnviados(cadastrosIdb.filter(cadastro => cadastro.status === 'ok').length);
         setLoading(false);
     }
 
@@ -55,6 +59,8 @@ function ListaCadastrosPage() {
             <AppToolbar logoutButton/>
             <div>
                 <Typography variant="h6">Registros</Typography>
+                <Typography variant="subtitle1">Registrados: {numRegistros}</Typography>
+                <Typography variant="subtitle1">Enviados: {numEnviados}</Typography>
                 <List dense className={classes.list} >
                     {cadastros.map((cadastro) => {
                         return (

@@ -219,9 +219,9 @@ function CadastroPage(props) {
           console.log(err);
           if ('serviceWorker' in navigator && 'SyncManager' in window) {
             navigator.serviceWorker.ready.then(function (reg) {
-              reg.sync.register('sendCadastros');
               setLoading(false);
               history.push('/cadastros');
+              return reg.sync.register('sendCadastros');
             }).catch((e) => {
               // system was unable to register for a sync,
               // this could be an OS-level restriction
