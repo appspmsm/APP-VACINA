@@ -43,7 +43,7 @@ function AppToolbar(props) {
                         <ArrowBack />
                     </IconButton> : null}
                 <Typography variant="h6" className={classes.title}>
-                    Vacinas
+                    Vacina SM
                 </Typography>
                 
                 {logoutButton ? 

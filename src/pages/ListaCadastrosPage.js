@@ -54,7 +54,7 @@ function ListaCadastrosPage() {
         <div>
             <AppToolbar logoutButton/>
             <div>
-                <Typography variant="h6">Cadastros</Typography>
+                <Typography variant="h6">Registros</Typography>
                 <List dense className={classes.list} >
                     {cadastros.map((cadastro) => {
                         return (

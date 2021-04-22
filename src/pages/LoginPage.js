@@ -94,7 +94,7 @@ function LoginPage() {
             <AppBar position="static">
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
-                        Vacinas
+                        Vacina SM
                     </Typography>
                 </Toolbar>
             </AppBar>
