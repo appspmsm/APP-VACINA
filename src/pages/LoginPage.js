@@ -51,7 +51,7 @@ function LoginPage() {
         const login = localStorage.getItem('login');
         const token = localStorage.getItem('token');
         if(login && token){
-            history.push('/cadastros')
+            history.push('/selecao')
         }
     }, []);
 
@@ -76,7 +76,7 @@ function LoginPage() {
                 if(json.success){
                     localStorage.setItem('login', user);
                     localStorage.setItem('token', json.token);
-                    history.push('/cadastros');
+                    history.push('/selecao');
                 } else {
                     setError(json.message);
                 }

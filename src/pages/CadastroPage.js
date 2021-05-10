@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Select, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
 import { cpfMask, dnMask } from '../util/mask';
 import { getURL } from '../adapters/api-planilha';
 import HandwriteCanvas from '../components/HandwriteCanvas';
@@ -65,6 +65,10 @@ const useStyles = makeStyles((theme) => ({
     marginTop: -12,
     marginLeft: -12,
   },
+  formControl: {
+    margin: theme.spacing(1),
+    width: '90%',
+  },
 }));
 
 function CadastroPage(props) {
@@ -79,7 +83,7 @@ function CadastroPage(props) {
   const [canvas, setCanvas] = React.useState();
   const [canvasData, setCanvasData] = React.useState();
   const [activeStep, setActiveStep] = React.useState(0);
-  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Assinatura'];
+  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Assinatura', 'Categoria'];
   const stepSelects = [nome, dn, cpf];
   const nameKb = React.useRef();
   const [layout, setLayout] = React.useState("numericCPF");
@@ -88,17 +92,26 @@ function CadastroPage(props) {
   const [token, setToken] = React.useState();
   const [loading, setLoading] = React.useState(false);
   const matches = useMediaQuery('(min-height:590px)');
+  const [subgrupo, setSubgrupo] = React.useState('');
+  const [subgrupos, setSubgrupos] = React.useState([]);
   const db = new Dexie('Cadastros');
-  db.version(1).stores({
-    cadastros: '++id, cpf, status'
+  db.version(3).stores({
+    cadastros: '++id, cpf, status',
+    selecao: '++id'
   });
 
   useEffect(() => {
     const lsToken = localStorage.getItem('token');
     if (!lsToken) {
       history.push('/');
+    } else if(!props.location.state){
+      history.push('/selecao');
     } else {
       setToken(lsToken);
+      db.selecao.get(0).then(selecao => {
+        const subgruposFiltered = selecao.grupos.filter(grupo => grupo[0] === props.location.state.grupo).map(grupo => grupo[1]).sort();
+        setSubgrupos(subgruposFiltered);
+      });
     }
   }, [])
 
@@ -179,6 +192,10 @@ function CadastroPage(props) {
       dn: dn,
       cpf: cpf,
       assinatura: canvasData,
+      vacina: props.location.state.vacina,
+      lote: props.location.state.lote,
+      grupo: props.location.state.grupo,
+      subgrupo: subgrupo,
       time: new Date(Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       status: status,
       token: token
@@ -200,6 +217,10 @@ function CadastroPage(props) {
         params.append('cpf', cpf);
         params.append('type', 'setCadastro');
         params.append('assinatura', canvasData);
+        params.append('vacina', props.location.state.vacina);
+        params.append('lote', props.location.state.lote);
+        params.append('grupo', props.location.state.grupo);
+        params.append('subgrupo', subgrupo);
         params.append('time', new Date(Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }))
         fetch(getURL(), {
           method: 'post',
@@ -210,7 +231,11 @@ function CadastroPage(props) {
             if (json.success) {
               updateCadastroIdb(responseIdb);
               setLoading(false);
-              history.push('/cadastros');
+              history.push('/cadastros', {
+                vacina: props.location.state.vacina,
+                lote: props.location.state.lote,
+                grupo: props.location.state.grupo
+              });
             } else {
               alert('Não foi possível enviar o cadastro.')
             }
@@ -220,7 +245,11 @@ function CadastroPage(props) {
           if ('serviceWorker' in navigator && 'SyncManager' in window) {
             navigator.serviceWorker.ready.then(function (reg) {
               setLoading(false);
-              history.push('/cadastros');
+              history.push('/cadastros', {
+                vacina: props.location.state.vacina,
+                lote: props.location.state.lote,
+                grupo: props.location.state.grupo
+              });
               return reg.sync.register('sendCadastros');
             }).catch((e) => {
               // system was unable to register for a sync,
@@ -298,6 +327,10 @@ function CadastroPage(props) {
     setDialogOpen(false);
   }
 
+  const handleChangeSubgrupo = (event) => {
+    setSubgrupo(event.target.value);
+  };
+
   function getStepContent(step) {
     switch (step) {
       case 0:
@@ -365,6 +398,37 @@ function CadastroPage(props) {
             </div>
           </div>
         );
+        case 4:
+          return (
+            <div className={classes.divCenter}>
+              <FormControl className={classes.formControl}>
+                <InputLabel id="vacina-select-label">Categoria do grupo prioritário</InputLabel>
+                <Select
+                  labelId="vacina-select-label"
+                  id="vacina-select"
+                  value={subgrupo}
+                  onChange={handleChangeSubgrupo}
+                >
+                {subgrupos.map((subgrupoItem)=>{
+                  return <MenuItem key={subgrupoItem} value={subgrupoItem}>{subgrupoItem}</MenuItem>
+                })}
+                </Select>
+              </FormControl>
+              <div className={classes.buttons}>
+                <Button disabled={activeStep === 0} onClick={handleBack}>
+                  Voltar
+                  </Button>
+                <Button
+                  disabled={stepSelects[activeStep] === ''}
+                  variant="contained"
+                  color="primary"
+                  onClick={handleNext}
+                >
+                  Próximo
+                  </Button>
+              </div>
+            </div>
+          );
       default:
         return 'Unknown step';
     }
@@ -408,6 +472,10 @@ function CadastroPage(props) {
         </div>}
       {activeStep === steps.length ? (
         <div>
+          <Typography>Vacina: {props.location.state.vacina}</Typography>
+          <Typography>Lote: {props.location.state.lote}</Typography>
+          <Typography>Grupo: {props.location.state.grupo}</Typography>
+          <Typography>Categoria: {subgrupo}</Typography>
           <Typography>CPF: {validateCPF(cpf) ? cpf : <span className={classes.error}>CPF inválido</span>}</Typography>
           <Typography>Nome: {nome ? nome : <span className={classes.error}>Não preenchido</span>}</Typography>
           <Typography>Data de Nascimento: {validateDate(dn) ? dn : <span className={classes.error}>Data inválida</span>}</Typography>

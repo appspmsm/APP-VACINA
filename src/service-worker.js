@@ -81,8 +81,9 @@ async function sendCadastros() {
   console.log('function sendCadastros');
   try {
     const db = new Dexie('Cadastros');
-    db.version(1).stores({
-      cadastros: '++id, cpf, status'
+    db.version(3).stores({
+      cadastros: '++id, cpf, status',
+      selecao: '++id'
     });
     const cadastros = await db.cadastros.where('status').equals('pend').toArray();
     console.log(cadastros);

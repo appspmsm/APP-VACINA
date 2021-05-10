@@ -14,6 +14,8 @@ import { useHistory } from 'react-router-dom';
 import { getURL } from '../adapters/api-planilha';
 import { Backdrop, CircularProgress } from '@material-ui/core';
 import AppToolbar from '../components/AppToolbar';
+import Dexie from 'dexie';
+import { Dvr } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   stepper: {
@@ -61,6 +63,11 @@ function SelecaoPage(props) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const db = new Dexie('Cadastros');
+    db.version(3).stores({
+      cadastros: '++id, cpf, status',
+      selecao: '++id'
+    })
     if(token){
       setLoading(true);
       const params = new URLSearchParams();
@@ -74,17 +81,30 @@ function SelecaoPage(props) {
           console.log(json);
           setLoading(false);
           if(json.success){
-              setGrupos(json.grupos);
+              setGrupos(json.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
               setVacinas(json.vacinas);
               setLotes(json.lotes);
+              db.selecao.put({
+                id: 0,
+                vacinas: json.vacinas,
+                lotes: json.lotes,
+                grupos: json.grupos
+              });
           } else {
               localStorage.removeItem('token');
               history.push('/');
           }
       })).catch(e => {
           console.log(e);
+          const selecaodb = db.selecao.get(0);
+          if(selecaodb){
+            setVacinas(selecaodb.vacinas);
+            setLotes(selecaodb.lotes);
+            setGrupos(selecaodb.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
+          }else{
+            alert('Não foi possível conectar ao servidor.')
+          }
           setLoading(false);
-          alert('Não foi possível conectar ao servidor.')
       });
     } else {
       history.push('/');
@@ -112,7 +132,7 @@ function SelecaoPage(props) {
   };
 
   const handleConfirmation = (event) => {
-    history.push('/listavacinados', {grupo: grupo, vacina: vacina, lote: lote});
+    history.push('/cadastros', {grupo: grupo, vacina: vacina, lote: lote});
 
   }
 

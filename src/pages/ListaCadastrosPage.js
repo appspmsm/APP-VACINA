@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme) => ({
 
 }));
 
-function ListaCadastrosPage() {
+function ListaCadastrosPage(props) {
     const classes = useStyles();
     const history = useHistory();
     const [cadastros, setCadastros] = React.useState([]);
@@ -33,12 +33,18 @@ function ListaCadastrosPage() {
     const [numRegistros, setNumRegistros] = React.useState(0);
     const [numEnviados, setNumEnviados] = React.useState(0);
     const db = new Dexie('Cadastros');
-    db.version(1).stores({
-      cadastros: '++id, cpf, status'
+    db.version(3).stores({
+        cadastros: '++id, cpf, status',
+        selecao: '++id'
     });
 
     useEffect(()=>{
-        getCadastros();
+        if(props.location.state){
+            getCadastros();
+        }
+        else{
+            history.push('/selecao');
+        }
     }, [])
 
     const getCadastros = async () => {
@@ -51,12 +57,16 @@ function ListaCadastrosPage() {
     }
 
     const handleAdd = () => {
-        history.push('/novocadastro');
+        history.push('/novocadastro', {
+            vacina: props.location.state.vacina,
+            lote: props.location.state.lote,
+            grupo: props.location.state.grupo
+        });
     }
 
     return(
         <div>
-            <AppToolbar logoutButton/>
+            <AppToolbar logoutButton backButton/>
             <div>
                 <Typography variant="h6">Registros</Typography>
                 <Typography variant="subtitle1">Registrados: {numRegistros}</Typography>
