@@ -15,7 +15,6 @@ import { getURL } from '../adapters/api-planilha';
 import { Backdrop, CircularProgress } from '@material-ui/core';
 import AppToolbar from '../components/AppToolbar';
 import Dexie from 'dexie';
-import { Dvr } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   stepper: {
@@ -82,12 +81,12 @@ function SelecaoPage(props) {
           setLoading(false);
           if(json.success){
               setGrupos(json.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
-              setVacinas(json.vacinas);
-              setLotes(json.lotes);
+              setVacinas(json.vacinas.map(v=>v[0]));
+              setLotes(json.lotes.map(v=>v[0]));
               db.selecao.put({
                 id: 0,
-                vacinas: json.vacinas,
-                lotes: json.lotes,
+                vacinas: json.vacinas.map(v=>v[0]),
+                lotes: json.lotes.map(v=>v[0]),
                 grupos: json.grupos
               });
           } else {
@@ -96,15 +95,22 @@ function SelecaoPage(props) {
           }
       })).catch(e => {
           console.log(e);
-          const selecaodb = db.selecao.get(0);
-          if(selecaodb){
-            setVacinas(selecaodb.vacinas);
-            setLotes(selecaodb.lotes);
-            setGrupos(selecaodb.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
-          }else{
-            alert('Não foi possível conectar ao servidor.')
-          }
-          setLoading(false);
+          db.selecao.get(0).then(selecaodb => {
+            console.log('dbload');
+            if(selecaodb){
+              setVacinas(selecaodb.vacinas);
+              setLotes(selecaodb.lotes);
+              setGrupos(selecaodb.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
+            }else{
+              alert('Não foi possível conectar ao servidor, verifique sua conexão com a internet.')
+            }
+            setLoading(false);
+          }).catch(e => {
+            console.log(e);
+            alert('Não foi possível conectar ao servidor, verifique sua conexão com a internet.')
+            setLoading(false);
+          });
+          
       });
     } else {
       history.push('/');
