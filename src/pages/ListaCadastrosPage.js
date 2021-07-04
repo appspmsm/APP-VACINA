@@ -60,7 +60,10 @@ function ListaCadastrosPage(props) {
         history.push('/novocadastro', {
             vacina: props.location.state.vacina,
             lote: props.location.state.lote,
-            grupo: props.location.state.grupo
+            grupo: props.location.state.grupo,
+            dose: props.location.state.dose,
+            local: props.location.state.local,
+            profissional: props.location.state.profissional
         });
     }
 

@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
-import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, InputLabel, MenuItem, Select, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormHelperText, InputLabel, MenuItem, Select, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
 import { cpfMask, dnMask } from '../util/mask';
 import { getURL } from '../adapters/api-planilha';
 import HandwriteCanvas from '../components/HandwriteCanvas';
@@ -10,6 +10,7 @@ import Keyboard from 'react-simple-keyboard';
 import "react-simple-keyboard/build/css/index.css";
 import Dexie from 'dexie';
 import { validateCPF, validateDate } from '../util/validacao';
+import { getFaixaEtaria, getIdade } from '../util/idade';
 
 const useStyles = makeStyles((theme) => ({
   divCenter: {
@@ -37,14 +38,17 @@ const useStyles = makeStyles((theme) => ({
     marginRight: 'auto'
   },
   buttons: {
-    position: 'absolute',
-    bottom: 10,
+    position: 'fixed',
+    bottom: 30,
     left: '50%',
     width: 200,
     'margin-left': '-100px'
   },
-  stepper: {
+  stepperDiv: {
     width: '100%'
+  },
+  stepper: {
+    paddingLeft: 0
   },
   keyboard: {
     position: 'absolute',
@@ -69,6 +73,9 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
     width: '90%',
   },
+  dados: {
+    marginBottom: 80
+  }
 }));
 
 function CadastroPage(props) {
@@ -93,6 +100,7 @@ function CadastroPage(props) {
   const [loading, setLoading] = React.useState(false);
   const matches = useMediaQuery('(min-height:590px)');
   const [subgrupo, setSubgrupo] = React.useState('');
+  const [subgrupoError, setSubgrupoError] = React.useState(false);
   const [subgrupos, setSubgrupos] = React.useState([]);
   const db = new Dexie('Cadastros');
   db.version(3).stores({
@@ -150,6 +158,8 @@ function CadastroPage(props) {
       setNomeError(true);
     } else if (activeStep === 2 && !validateDate(dn)) {
       setDnError(true);
+    }else if(activeStep === 4 && !subgrupo) {
+      setSubgrupoError(true);
     } else {
       if (activeStep === 0) {
         setLayout('default')
@@ -157,6 +167,9 @@ function CadastroPage(props) {
         setLayout('numericDn');
       } else if (activeStep === 3) {
         setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
+        if(props.location.state.grupo === 'Faixa Etária'){
+          setSubgrupo(getFaixaEtaria(dn));
+        }
       }
       setInputName(getInputName(activeStep + 1));
       setActiveStep((prevStep) => prevStep + 1);
@@ -195,6 +208,9 @@ function CadastroPage(props) {
       vacina: props.location.state.vacina,
       lote: props.location.state.lote,
       grupo: props.location.state.grupo,
+      dose: props.location.state.dose,
+      local: props.location.state.local,
+      profissional: props.location.state.profissional,
       subgrupo: subgrupo,
       time: new Date(Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }),
       status: status,
@@ -207,7 +223,7 @@ function CadastroPage(props) {
   }
 
   const handleConfirmation = () => {
-    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData) {
+    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData && subgrupo) {
       setLoading(true);
       addCadastroIdb('pend').then(responseIdb => {
         const params = new URLSearchParams();
@@ -220,6 +236,9 @@ function CadastroPage(props) {
         params.append('vacina', props.location.state.vacina);
         params.append('lote', props.location.state.lote);
         params.append('grupo', props.location.state.grupo);
+        params.append('dose', props.location.state.dose);
+        params.append('local', props.location.state.local);
+        params.append('profissional', props.location.state.profissional);
         params.append('subgrupo', subgrupo);
         params.append('time', new Date(Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }))
         fetch(getURL(), {
@@ -234,7 +253,10 @@ function CadastroPage(props) {
               history.push('/cadastros', {
                 vacina: props.location.state.vacina,
                 lote: props.location.state.lote,
-                grupo: props.location.state.grupo
+                grupo: props.location.state.grupo,
+                dose: props.location.state.dose,
+                local: props.location.state.local,
+                profissional: props.location.state.profissional
               });
             } else {
               alert('Não foi possível enviar o cadastro.')
@@ -248,7 +270,10 @@ function CadastroPage(props) {
               history.push('/cadastros', {
                 vacina: props.location.state.vacina,
                 lote: props.location.state.lote,
-                grupo: props.location.state.grupo
+                grupo: props.location.state.grupo,
+                dose: props.location.state.dose,
+                local: props.location.state.local,
+                profissional: props.location.state.profissional
               });
               return reg.sync.register('sendCadastros');
             }).catch((e) => {
@@ -329,6 +354,7 @@ function CadastroPage(props) {
 
   const handleChangeSubgrupo = (event) => {
     setSubgrupo(event.target.value);
+    setSubgrupoError(false);
   };
 
   function getStepContent(step) {
@@ -401,7 +427,7 @@ function CadastroPage(props) {
         case 4:
           return (
             <div className={classes.divCenter}>
-              <FormControl className={classes.formControl}>
+              <FormControl className={classes.formControl} error={subgrupoError}>
                 <InputLabel id="vacina-select-label">Categoria do grupo prioritário</InputLabel>
                 <Select
                   labelId="vacina-select-label"
@@ -413,6 +439,7 @@ function CadastroPage(props) {
                   return <MenuItem key={subgrupoItem} value={subgrupoItem}>{subgrupoItem}</MenuItem>
                 })}
                 </Select>
+                {subgrupoError && <FormHelperText>Selecione a categoria</FormHelperText>}
               </FormControl>
               <div className={classes.buttons}>
                 <Button disabled={activeStep === 0} onClick={handleBack}>
@@ -458,8 +485,8 @@ function CadastroPage(props) {
     <div>
       <AppToolbar backButton logoutButton />
       {matches &&
-        <div className={classes.stepper}>
-          <Stepper activeStep={activeStep} alternativeLabel>
+        <div className={classes.stepperDiv}>
+          <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
             {steps.map((label, index) => {
               const stepProps = {};
               return (
@@ -471,17 +498,21 @@ function CadastroPage(props) {
           </Stepper>
         </div>}
       {activeStep === steps.length ? (
-        <div>
+        <div className={classes.dados}>
+          <Typography>Dose: {props.location.state.dose}</Typography>
           <Typography>Vacina: {props.location.state.vacina}</Typography>
           <Typography>Lote: {props.location.state.lote}</Typography>
           <Typography>Grupo: {props.location.state.grupo}</Typography>
           <Typography>Categoria: {subgrupo}</Typography>
+          <Typography>Local: {props.location.state.local}</Typography>
+          <Typography>Profissional: {props.location.state.profissional}</Typography>
           <Typography>CPF: {validateCPF(cpf) ? cpf : <span className={classes.error}>CPF inválido</span>}</Typography>
           <Typography>Nome: {nome ? nome : <span className={classes.error}>Não preenchido</span>}</Typography>
           <Typography>Data de Nascimento: {validateDate(dn) ? dn : <span className={classes.error}>Data inválida</span>}</Typography>
+          <Typography>Idade: {validateDate(dn) ? getIdade(dn) + ' anos' : <span className={classes.error}>Data inválida</span>}</Typography>
           <Typography>Assinatura: {!canvasData && <span className={classes.error}>Não assinado</span>}</Typography>
           <div>
-            {canvasData && <img src={'data:image/png;base64,' + canvasData} alt="assinatura"></img>}
+            {canvasData && <img src={'data:image/png;base64,' + canvasData} alt="assinatura" width={100}></img>}
           </div>
           <div className={classes.buttons}>
             <Button disabled={loading} onClick={handleBack}>

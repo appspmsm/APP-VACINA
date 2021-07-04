@@ -12,7 +12,7 @@ import Select from '@material-ui/core/Select';
 import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router-dom';
 import { getURL } from '../adapters/api-planilha';
-import { Backdrop, CircularProgress } from '@material-ui/core';
+import { Backdrop, CircularProgress, MobileStepper } from '@material-ui/core';
 import AppToolbar from '../components/AppToolbar';
 import Dexie from 'dexie';
 
@@ -49,15 +49,21 @@ const useStyles = makeStyles((theme) => ({
 function SelecaoPage(props) {
   const classes = useStyles();
   const [activeStep, setActiveStep] = React.useState(0);
-  const steps = ['Selecione o grupo', 'Selecione a vacina', 'Selecione o lote'];
+  const steps = ['Selecione a dose', 'Selecione o grupo', 'Selecione a vacina', 'Selecione o lote', 'Selecione o local', 'Selecione o profissional'];
+  const [dose, setDose] = React.useState('');
   const [grupo, setGrupo] = React.useState('');
   const [vacina, setVacina] = React.useState('');
   const [lote, setLote] = React.useState('');
+  const [local, setLocal] = React.useState('');
+  const [profissional, setProfissional] = React.useState('');
+  const [doses, setDoses] = React.useState(['Primeira', 'Segunda', 'Única']);
   const [grupos, setGrupos] = React.useState([]);
   const [vacinas, setVacinas] = React.useState([]);
   const [lotes, setLotes] = React.useState([]);
+  const [locais, setLocais] = React.useState([]);
+  const [profissionais, setProfissionais] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
-  const stepSelects = [grupo, vacina, lote];
+  const stepSelects = [dose, grupo, vacina, lote, local, profissional];
   const history = useHistory();
 
   useEffect(() => {
@@ -83,11 +89,15 @@ function SelecaoPage(props) {
               setGrupos(json.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
               setVacinas(json.vacinas.map(v=>v[0]));
               setLotes(json.lotes.map(v=>v[0]));
+              setLocais(json.locais.map(v=>v[0]));
+              setProfissionais(json.profissionais.map(v=>v[0]));
               db.selecao.put({
                 id: 0,
                 vacinas: json.vacinas.map(v=>v[0]),
                 lotes: json.lotes.map(v=>v[0]),
-                grupos: json.grupos
+                grupos: json.grupos,
+                locais: json.locais.map(v=>v[0]),
+                profissionais: json.profissionais.map(v=>v[0])
               });
           } else {
               localStorage.removeItem('token');
@@ -101,6 +111,8 @@ function SelecaoPage(props) {
               setVacinas(selecaodb.vacinas);
               setLotes(selecaodb.lotes);
               setGrupos(selecaodb.grupos.map(v=>v[0]).filter((v,i,s) => s.indexOf(v) === i).sort());
+              setLocais(selecaodb.locais);
+              setProfissionais(selecaodb.profissionais);
             }else{
               alert('Não foi possível conectar ao servidor, verifique sua conexão com a internet.')
             }
@@ -125,6 +137,10 @@ function SelecaoPage(props) {
     setActiveStep((prevStep)=>prevStep+-1);
   }
 
+  const handleChangeDose = (event) => {
+    setDose(event.target.value);
+  };
+
   const handleChangeGrupo = (event) => {
     setGrupo(event.target.value);
   };
@@ -137,8 +153,16 @@ function SelecaoPage(props) {
     setLote(event.target.value);
   };
 
+  const handleChangeLocal = (event) => {
+    setLocal(event.target.value);
+  };
+
+  const handleChangeProfissional = (event) => {
+    setProfissional(event.target.value);
+  };
+
   const handleConfirmation = (event) => {
-    history.push('/cadastros', {grupo: grupo, vacina: vacina, lote: lote});
+    history.push('/cadastros', {dose: dose, grupo: grupo, vacina: vacina, lote: lote, local: local, profissional: profissional});
 
   }
 
@@ -146,6 +170,22 @@ function SelecaoPage(props) {
   function getStepContent(step) {
     switch (step) {
       case 0:
+        return (
+            <FormControl className={classes.formControl}>
+              <InputLabel id="dose-select-label">Dose</InputLabel>
+              <Select
+                labelId="dose-select-label"
+                id="dose-select"
+                value={dose}
+                onChange={handleChangeDose}
+              >
+                {doses.map((doseItem)=>{
+                  return <MenuItem key={doseItem} value={doseItem}>{doseItem}</MenuItem>
+                })}
+              </Select>
+            </FormControl>
+        );
+      case 1:
         return (
             <FormControl className={classes.formControl}>
               <InputLabel id="grupo-select-label">Grupo</InputLabel>
@@ -161,7 +201,7 @@ function SelecaoPage(props) {
               </Select>
             </FormControl>
         );
-      case 1:
+      case 2:
         return (
           <FormControl className={classes.formControl}>
           <InputLabel id="vacina-select-label">Vacina</InputLabel>
@@ -177,7 +217,7 @@ function SelecaoPage(props) {
           </Select>
         </FormControl>
         );
-      case 2:
+      case 3:
         return (
           <FormControl className={classes.formControl}>
           <InputLabel id="lote-select-label">Lote</InputLabel>
@@ -193,6 +233,38 @@ function SelecaoPage(props) {
           </Select>
         </FormControl>
         );
+        case 4:
+          return (
+            <FormControl className={classes.formControl}>
+            <InputLabel id="local-select-label">Local</InputLabel>
+            <Select
+              labelId="local-select-label"
+              id="local-select"
+              value={local}
+              onChange={handleChangeLocal}
+            >
+              {locais.map((localItem)=>{
+                return <MenuItem key={localItem} value={localItem}>{localItem}</MenuItem>
+              })}
+            </Select>
+          </FormControl>
+          );
+        case 5:
+            return (
+              <FormControl className={classes.formControl}>
+              <InputLabel id="profissional-select-label">Profissional Responsável</InputLabel>
+              <Select
+                labelId="profissional-select-label"
+                id="profissional-select"
+                value={profissional}
+                onChange={handleChangeProfissional}
+              >
+                {profissionais.map((profissionalItem)=>{
+                  return <MenuItem key={profissionalItem} value={profissionalItem}>{profissionalItem}</MenuItem>
+                })}
+              </Select>
+            </FormControl>
+            );
       default:
         return 'Unknown step';
     }
@@ -209,9 +281,12 @@ function SelecaoPage(props) {
 
         {activeStep === steps.length ? (
           <Container>
+            <p>Dose: {dose}</p>
             <p>Grupo: {grupo}</p>
             <p>Vacina: {vacina}</p>
             <p>Lote: {lote}</p>
+            <p>Local: {local}</p>
+            <p>Profissional: {profissional}</p>
             <div className={classes.centerDiv}>
               <Button
                 variant="contained"
@@ -224,10 +299,12 @@ function SelecaoPage(props) {
         ) : (
           <div>
             <div style={{textAlign: "center"}}>{getStepContent(activeStep)}</div>
-            <div className={classes.buttons}>
-              <Button disabled={activeStep === 0} onClick={handleBack}>
-                Voltar
-              </Button>
+            <MobileStepper
+          variant="dots"
+          steps={steps.length}
+          position="bottom"
+          activeStep={activeStep}
+          nextButton={
               <Button
                 disabled={stepSelects[activeStep]===''}
                 variant="contained"
@@ -236,11 +313,17 @@ function SelecaoPage(props) {
               >
                 Próximo
               </Button>
-            </div>
+          }
+          backButton={
+            <Button disabled={activeStep === 0} onClick={handleBack}>
+                Voltar
+              </Button>
+          }
+        />
           </div>
         )}
       
-      <div className={classes.stepper}>
+      {/*<div className={classes.stepper}>
         <Stepper activeStep={activeStep}>
           {steps.map((label, index) => {
             const stepProps = {};
@@ -251,7 +334,9 @@ function SelecaoPage(props) {
             );
           })}
         </Stepper>
-      </div>
+        
+        </div>*/}
+      
     </div>
   );
 }
