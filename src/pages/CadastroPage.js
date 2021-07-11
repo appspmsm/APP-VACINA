@@ -94,7 +94,7 @@ function CadastroPage(props) {
   const stepSelects = [nome, dn, cpf];
   const nameKb = React.useRef();
   const [layout, setLayout] = React.useState("numericCPF");
-  const [inputName, setInputName] = React.useState("nameInput");
+  const [inputName, setInputName] = React.useState("nameCpf");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [token, setToken] = React.useState();
   const [loading, setLoading] = React.useState(false);
@@ -162,7 +162,7 @@ function CadastroPage(props) {
       setSubgrupoError(true);
     } else {
       if (activeStep === 0) {
-        setLayout('default')
+        setLayout('default');
       } else if (activeStep === 1) {
         setLayout('numericDn');
       } else if (activeStep === 3) {
@@ -339,6 +339,29 @@ function CadastroPage(props) {
         break;
       default: break;
     }
+  }
+
+  const kbOnRender = (kb) => {
+    console.log(kb);
+    /*switch(kb.options.inputName){
+      case 'nameCpf': 
+        kb.setCaretPosition(cpf.length);
+        break;
+      case 'nameInput':
+        kb.setCaretPosition(nome.length);
+        break;
+      case 'nameDn':
+        kb.setCaretPosition(dn.length);
+        break;
+      default: break;
+    }
+    console.log(kb);*/
+  }
+
+  const kbOnInit = (kb) => {
+    kb.setInput(cpf.replace(/\D/g, ''), 'nameCpf');
+    kb.setInput(nome, 'nameInput');
+    kb.setInput(dn.replace(/\D/g, ''), 'nameDn');
   }
 
   const handleShift = () => {
@@ -580,9 +603,10 @@ function CadastroPage(props) {
           ]}
           theme={classes.kbTheme + " hg-theme-default"}
           layoutName={layout}
+          keyboardRef={r => (nameKb.current = r)}
           onChange={kbOnChange}
           onKeyPress={kbOnKeyPress}
-          keyboardRef={r => (nameKb.current = r)}
+          onInit={kbOnInit}
           inputName={inputName}
           useMouseEvents={true}
         />
