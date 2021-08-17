@@ -3,13 +3,13 @@ import { makeStyles } from '@material-ui/core/styles';
 import { useHistory } from 'react-router';
 import AppToolbar from '../components/AppToolbar';
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, FormControl, FormHelperText, InputLabel, MenuItem, Select, Step, StepLabel, Stepper, TextField, Typography, useMediaQuery } from '@material-ui/core';
-import { cpfMask, dnMask } from '../util/mask';
+import { cpfMask, dnMask, telefoneMask } from '../util/mask';
 import { getURL } from '../adapters/api-planilha';
 import HandwriteCanvas from '../components/HandwriteCanvas';
 import Keyboard from 'react-simple-keyboard';
 import "react-simple-keyboard/build/css/index.css";
 import Dexie from 'dexie';
-import { validateCPF, validateDate } from '../util/validacao';
+import { validateCPF, validateDate, validateTelefone } from '../util/validacao';
 import { getFaixaEtaria, getIdade } from '../util/idade';
 
 const useStyles = makeStyles((theme) => ({
@@ -84,13 +84,15 @@ function CadastroPage(props) {
   const [cpf, setCpf] = React.useState('');
   const [nome, setNome] = React.useState('');
   const [dn, setDn] = React.useState('');
+  const [telefone, setTelefone] = React.useState('');
   const [nomeError, setNomeError] = React.useState(false);
   const [cpfError, setCpfError] = React.useState(false);
   const [dnError, setDnError] = React.useState(false);
+  const [telefoneError, setTelefoneError] = React.useState(false);
   const [canvas, setCanvas] = React.useState();
   const [canvasData, setCanvasData] = React.useState();
   const [activeStep, setActiveStep] = React.useState(0);
-  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Assinatura', 'Categoria'];
+  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Telefone', 'Assinatura', 'Categoria'];
   const stepSelects = [nome, dn, cpf];
   const nameKb = React.useRef();
   const [layout, setLayout] = React.useState("numericCPF");
@@ -151,6 +153,17 @@ function CadastroPage(props) {
     setDn(e.target.value);
   }
 
+  const handleTelefoneChange = (e) => {
+    nameKb.current.setInput(e.target.value);
+    e.target.value = telefoneMask(e.target.value);
+    if (e.target.value.length === 10 && !validateTelefone(e.target.value)) {
+      setTelefoneError(true);
+    } else if (e.target.value.length < 10 || validateTelefone(e.target.value)) {
+      setTelefoneError(false);
+    }
+    setTelefone(e.target.value);
+  }
+
   const handleNext = () => {
     if (activeStep === 0 && !validateCPF(cpf)) {
       setCpfError(true);
@@ -158,14 +171,20 @@ function CadastroPage(props) {
       setNomeError(true);
     } else if (activeStep === 2 && !validateDate(dn)) {
       setDnError(true);
-    }else if(activeStep === 4 && !subgrupo) {
+    } else if (activeStep === 3 && !validateTelefone(telefone)) {
+      setTelefoneError(true);
+    } else if (activeStep === 4 && props.location.state.dose === 'Segunda' ) {
+      setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
+      setActiveStep((prevStep) => prevStep + 2);
+      return;
+    }else if(activeStep === 5 && !subgrupo) {
       setSubgrupoError(true);
     } else {
       if (activeStep === 0) {
         setLayout('default');
-      } else if (activeStep === 1) {
+      } else if (activeStep === 1 || activeStep === 2) {
         setLayout('numericDn');
-      } else if (activeStep === 3) {
+      } else if (activeStep === 4) {
         setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
         if(props.location.state.grupo === 'Faixa Etária'){
           setSubgrupo(getFaixaEtaria(dn));
@@ -187,6 +206,13 @@ function CadastroPage(props) {
     if (activeStep === 3) {
       setLayout('numericDn');
     }
+    if (activeStep === 4) {
+      setLayout('numericDn');
+    }
+    if (activeStep === 6  && props.location.state.dose === 'Segunda') {
+      setActiveStep((prevStep) => prevStep - 2);
+      return;
+    }
     setActiveStep((prevStep) => prevStep - 1);
   }
 
@@ -195,6 +221,7 @@ function CadastroPage(props) {
       case 0: return 'nameCpf';
       case 1: return 'nameInput';
       case 2: return 'nameDn';
+      case 3: return 'nameTelefone';
       default: break;
     }
   }
@@ -204,6 +231,7 @@ function CadastroPage(props) {
       nome: nome,
       dn: dn,
       cpf: cpf,
+      telefone: telefone,
       assinatura: canvasData,
       vacina: props.location.state.vacina,
       lote: props.location.state.lote,
@@ -223,7 +251,7 @@ function CadastroPage(props) {
   }
 
   const handleConfirmation = () => {
-    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData && subgrupo) {
+    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData && (subgrupo || props.location.state.dose === 'Segunda')) {
       setLoading(true);
       addCadastroIdb('pend').then(responseIdb => {
         const params = new URLSearchParams();
@@ -231,6 +259,7 @@ function CadastroPage(props) {
         params.append('nome', nome);
         params.append('dn', dn);
         params.append('cpf', cpf);
+        params.append('telefone', telefone);
         params.append('type', 'setCadastro');
         params.append('assinatura', canvasData);
         params.append('vacina', props.location.state.vacina);
@@ -313,6 +342,7 @@ function CadastroPage(props) {
         setNome(input.replace(/[^A-ZÇ ]/g, ''));
         break;
       case 2:
+        console.log('Está no 2');
         const maskdn = dnMask(input);
         if (maskdn.length === 10 && !validateDate(maskdn)) {
           setDnError(true);
@@ -321,6 +351,16 @@ function CadastroPage(props) {
         }
         setDn(maskdn);
         break;
+      case 3:
+        console.log('Está no 3');
+          const masktelefone = telefoneMask(input);
+          if (masktelefone.length >= 12 && !validateTelefone(masktelefone)) {
+            setTelefoneError(true);
+          } else if (masktelefone.length < 12 || validateTelefone(masktelefone)) {
+            setTelefoneError(false);
+          }
+          setTelefone(masktelefone);
+          break;
       default: break;
     }
 
@@ -362,6 +402,7 @@ function CadastroPage(props) {
     kb.setInput(cpf.replace(/\D/g, ''), 'nameCpf');
     kb.setInput(nome, 'nameInput');
     kb.setInput(dn.replace(/\D/g, ''), 'nameDn');
+    kb.setInput(telefone.replace(/\D/g, ''), 'nameTelefone');
   }
 
   const handleShift = () => {
@@ -428,7 +469,23 @@ function CadastroPage(props) {
             </TextField>
           </div>
         );
-      case 3:
+        case 3:
+          return (
+            <div className={classes.divCenter}>
+              <TextField
+                error={telefoneError}
+                fullWidth
+                id="telefoneInput"
+                className={classes.textField}
+                label="Telefone"
+                helperText={telefoneError ? "Telefone inválido." : ""}
+                inputProps={{ inputMode: "none", style: { fontSize: '23px' } }}
+                onChange={handleTelefoneChange}
+                value={telefone}>
+              </TextField>
+            </div>
+          );
+      case 4:
         return (
           <div className={classes.divCenter}>
             <HandwriteCanvas setCanvas={setCanvas}></HandwriteCanvas>
@@ -447,7 +504,7 @@ function CadastroPage(props) {
             </div>
           </div>
         );
-        case 4:
+        case 5:
           return (
             <div className={classes.divCenter}>
               <FormControl className={classes.formControl} error={subgrupoError}>
@@ -533,6 +590,7 @@ function CadastroPage(props) {
           <Typography>Nome: {nome ? nome : <span className={classes.error}>Não preenchido</span>}</Typography>
           <Typography>Data de Nascimento: {validateDate(dn) ? dn : <span className={classes.error}>Data inválida</span>}</Typography>
           <Typography>Idade: {validateDate(dn) ? getIdade(dn) + ' anos' : <span className={classes.error}>Data inválida</span>}</Typography>
+          <Typography>Telefone: {validateTelefone(telefone) ? telefone : <span className={classes.error}>Telefone inválido</span>}</Typography>
           <Typography>Assinatura: {!canvasData && <span className={classes.error}>Não assinado</span>}</Typography>
           <div>
             {canvasData && <img src={'data:image/png;base64,' + canvasData} alt="assinatura" width={100}></img>}
@@ -557,7 +615,7 @@ function CadastroPage(props) {
 
         </div>
       )}
-      {activeStep < 3 && <div className={classes.keyboard}>
+      {activeStep < 4 && <div className={classes.keyboard}>
         <Keyboard
           layout={{
             shift: [
@@ -620,7 +678,7 @@ function CadastroPage(props) {
         <DialogTitle id="alert-dialog-title">{"Erro no cadastro"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Informe CPF, nome, data de nascimento e assinatura.
+            Informe CPF, nome, data de nascimento, telefone e assinatura.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

@@ -29,4 +29,9 @@ const validateDate = (strDate) => {
     return d.getMonth() === parts[1] && d.getDate() === parts[0] && d.getFullYear() === parts[2];
 }
 
-export {validateCPF, validateDate};
+const validateTelefone = (strTelefone) => {
+    const telefone = strTelefone.replace(/\D/g, '');
+    return  telefone.length >= 10;
+}
+
+export {validateCPF, validateDate, validateTelefone};
