@@ -188,7 +188,7 @@ function SelecaoPage(props) {
       case 1:
         return (
             <FormControl className={classes.formControl}>
-              <InputLabel id="grupo-select-label">Grupo</InputLabel>
+              <InputLabel id="grupo-select-label">Categoria</InputLabel>
               <Select
                 labelId="grupo-select-label"
                 id="grupo-select"
@@ -282,7 +282,7 @@ function SelecaoPage(props) {
         {activeStep === steps.length ? (
           <Container>
             <p>Dose: {dose}</p>
-            <p>Grupo: {grupo}</p>
+            <p>Categoria: {grupo}</p>
             <p>Vacina: {vacina}</p>
             <p>Lote: {lote}</p>
             <p>Local: {local}</p>

@@ -37,6 +37,11 @@ const useStyles = makeStyles((theme) => ({
         margin: theme.spacing(1),
         position: 'relative',
     },
+    version: {
+        position: 'fixed',
+        bottom: '15px',
+        left: '15px'
+    }
 }));
 
 
@@ -48,6 +53,8 @@ function LoginPage() {
     const [error, setError] = React.useState();
 
     useEffect(() => {
+        localStorage.setItem('version', '1.3.1');
+        localStorage.setItem('versionDate', '18/08/2021');
         const login = localStorage.getItem('login');
         const token = localStorage.getItem('token');
         if(login && token){
@@ -141,6 +148,7 @@ function LoginPage() {
                     </div>
                 </form>
             </Container>
+            <div className={classes.version}>Versão 1.3.1 - 18/08/2021</div>
         </div>
     );
 }

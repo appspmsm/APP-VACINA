@@ -24,5 +24,5 @@ export const getCpf = () => {
 }
 
 export const getURL = () => {
-    return 'https://script.google.com/macros/s/AKfycby_YCppDqI4VJ4hQdk7JEZzAFBKojl8si2hrL8m76sW2Q5uhoxrkYRiQpV1nFWihKh9Kw/exec'
+    return 'https://script.google.com/macros/s/AKfycbxkQf1wEUKHZoB6kbYA_YPHOioUhUAPiW2ctj83G83iNhuvTT9eig_-R38xZkui8Fk_OA/exec'
 }

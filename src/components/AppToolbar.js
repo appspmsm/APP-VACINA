@@ -1,4 +1,4 @@
-import { makeStyles } from "@material-ui/core";
+import { Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, makeStyles } from "@material-ui/core";
 import { AppBar, IconButton, Toolbar, Typography } from "@material-ui/core";
 import { ArrowBack, ExitToApp } from '@material-ui/icons';
 import { useEffect, useState } from "react";
@@ -15,6 +15,7 @@ function AppToolbar(props) {
     const classes = useStyles();
     const [backButton, setBackButton] = useState(false);
     const [logoutButton, setLogoutButton] = useState(false);
+    const [dialogOpen, setDialogOpen] = useState(false);
     const history = useHistory();
 
     useEffect(() => {
@@ -30,7 +31,16 @@ function AppToolbar(props) {
         history.goBack();
     }
 
+    const handleLogoutDialog = () => {
+        setDialogOpen(true);
+    };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+    }
+
     const handleLogout = () => {
+        setDialogOpen(false);
         localStorage.removeItem('token');
         history.push('/');
     }
@@ -48,9 +58,30 @@ function AppToolbar(props) {
                 
                 {logoutButton ? 
                     <div>
-                        <IconButton edge="end" color="inherit" aria-label="sair" onClick={handleLogout}>
+                        <IconButton edge="end" color="inherit" aria-label="sair" onClick={handleLogoutDialog}>
                             <ExitToApp />
                         </IconButton> 
+                        <Dialog
+                            open={dialogOpen}
+                            onClose={handleDialogClose}
+                            aria-labelledby="alert-dialog-title"
+                            aria-describedby="alert-dialog-description"
+                        >
+                            <DialogTitle id="alert-dialog-title">{"Sair"}</DialogTitle>
+                            <DialogContent>
+                            <DialogContentText id="alert-dialog-description">
+                                Deseja realmente sair?
+                            </DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                            <Button onClick={handleDialogClose} color="primary">
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleLogout} color="primary" autoFocus>
+                                Sair
+                            </Button>
+                            </DialogActions>
+                        </Dialog>
                     </div>: null}
                     
             </Toolbar>

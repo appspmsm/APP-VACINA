@@ -92,7 +92,7 @@ function CadastroPage(props) {
   const [canvas, setCanvas] = React.useState();
   const [canvasData, setCanvasData] = React.useState();
   const [activeStep, setActiveStep] = React.useState(0);
-  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Telefone', 'Assinatura', 'Categoria'];
+  const steps = ['CPF', 'Nome', 'Data de nascimento', 'Telefone', 'Assinatura', 'Grupo'];
   const stepSelects = [nome, dn, cpf];
   const nameKb = React.useRef();
   const [layout, setLayout] = React.useState("numericCPF");
@@ -342,7 +342,6 @@ function CadastroPage(props) {
         setNome(input.replace(/[^A-ZÇ ]/g, ''));
         break;
       case 2:
-        console.log('Está no 2');
         const maskdn = dnMask(input);
         if (maskdn.length === 10 && !validateDate(maskdn)) {
           setDnError(true);
@@ -352,7 +351,6 @@ function CadastroPage(props) {
         setDn(maskdn);
         break;
       case 3:
-        console.log('Está no 3');
           const masktelefone = telefoneMask(input);
           if (masktelefone.length >= 12 && !validateTelefone(masktelefone)) {
             setTelefoneError(true);
@@ -508,7 +506,7 @@ function CadastroPage(props) {
           return (
             <div className={classes.divCenter}>
               <FormControl className={classes.formControl} error={subgrupoError}>
-                <InputLabel id="vacina-select-label">Categoria do grupo prioritário</InputLabel>
+                <InputLabel id="vacina-select-label">Grupo de atendimento</InputLabel>
                 <Select
                   labelId="vacina-select-label"
                   id="vacina-select"
@@ -519,7 +517,7 @@ function CadastroPage(props) {
                   return <MenuItem key={subgrupoItem} value={subgrupoItem}>{subgrupoItem}</MenuItem>
                 })}
                 </Select>
-                {subgrupoError && <FormHelperText>Selecione a categoria</FormHelperText>}
+                {subgrupoError && <FormHelperText>Selecione o grupo</FormHelperText>}
               </FormControl>
               <div className={classes.buttons}>
                 <Button disabled={activeStep === 0} onClick={handleBack}>
@@ -582,8 +580,8 @@ function CadastroPage(props) {
           <Typography>Dose: {props.location.state.dose}</Typography>
           <Typography>Vacina: {props.location.state.vacina}</Typography>
           <Typography>Lote: {props.location.state.lote}</Typography>
-          <Typography>Grupo: {props.location.state.grupo}</Typography>
-          <Typography>Categoria: {subgrupo}</Typography>
+          <Typography>Categoria: {props.location.state.grupo}</Typography>
+          <Typography>Grupo: {subgrupo}</Typography>
           <Typography>Local: {props.location.state.local}</Typography>
           <Typography>Profissional: {props.location.state.profissional}</Typography>
           <Typography>CPF: {validateCPF(cpf) ? cpf : <span className={classes.error}>CPF inválido</span>}</Typography>
