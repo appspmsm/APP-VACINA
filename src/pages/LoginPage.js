@@ -53,8 +53,8 @@ function LoginPage() {
     const [error, setError] = React.useState();
 
     useEffect(() => {
-        localStorage.setItem('version', '1.3.1');
-        localStorage.setItem('versionDate', '18/08/2021');
+        localStorage.setItem('version', '1.3.2');
+        localStorage.setItem('versionDate', '14/09/2021');
         const login = localStorage.getItem('login');
         const token = localStorage.getItem('token');
         if(login && token){
@@ -148,7 +148,7 @@ function LoginPage() {
                     </div>
                 </form>
             </Container>
-            <div className={classes.version}>Versão 1.3.1 - 18/08/2021</div>
+            <div className={classes.version}>Versão 1.3.2 - 14/09/2021</div>
         </div>
     );
 }
