@@ -56,7 +56,7 @@ function SelecaoPage(props) {
   const [lote, setLote] = React.useState('');
   const [local, setLocal] = React.useState('');
   const [profissional, setProfissional] = React.useState('');
-  const [doses, setDoses] = React.useState(['Primeira', 'Segunda', 'Única']);
+  const [doses, setDoses] = React.useState(['Primeira', 'Segunda', 'Terceira', 'Única']);
   const [grupos, setGrupos] = React.useState([]);
   const [vacinas, setVacinas] = React.useState([]);
   const [lotes, setLotes] = React.useState([]);

@@ -173,7 +173,7 @@ function CadastroPage(props) {
       setDnError(true);
     } else if (activeStep === 3 && !validateTelefone(telefone)) {
       setTelefoneError(true);
-    } else if (activeStep === 4 && props.location.state.dose === 'Segunda' ) {
+    } else if (activeStep === 4 && (props.location.state.dose === 'Segunda' || props.location.state.dose === 'Terceira') ) {
       setCanvasData(canvas.current.toDataURL('image/png').split(';base64,')[1]);
       setActiveStep((prevStep) => prevStep + 2);
       return;
@@ -209,7 +209,7 @@ function CadastroPage(props) {
     if (activeStep === 4) {
       setLayout('numericDn');
     }
-    if (activeStep === 6  && props.location.state.dose === 'Segunda') {
+    if (activeStep === 6  && (props.location.state.dose === 'Segunda' || props.location.state.dose === 'Terceira')) {
       setActiveStep((prevStep) => prevStep - 2);
       return;
     }
@@ -251,7 +251,7 @@ function CadastroPage(props) {
   }
 
   const handleConfirmation = () => {
-    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData && (subgrupo || props.location.state.dose === 'Segunda')) {
+    if (nome && validateDate(dn) && validateCPF(cpf) && canvasData && (subgrupo || props.location.state.dose === 'Segunda' || props.location.state.dose === 'Terceira')) {
       setLoading(true);
       addCadastroIdb('pend').then(responseIdb => {
         const params = new URLSearchParams();
