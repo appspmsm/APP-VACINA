@@ -93,7 +93,7 @@ async function sendCadastros() {
       params.append('cadastros', JSON.stringify(cadastros));
       params.append('token', token);
       params.append('type', 'setCadastros');
-      let response = await fetch('https://script.google.com/macros/s/AKfycbxkQf1wEUKHZoB6kbYA_YPHOioUhUAPiW2ctj83G83iNhuvTT9eig_-R38xZkui8Fk_OA/exec', {
+      let response = await fetch('https://script.google.com/macros/s/AKfycbxAFMlljdbDmllroIVQTwPjuBhRVrB2nPct1yxziKdjkhdVcNZaVIn-hDBXaSc-yA2C/exec', {
           method: 'post',
           redirect: 'follow',
           body: params
